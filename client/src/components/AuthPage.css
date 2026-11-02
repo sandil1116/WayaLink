@@ -107,3 +107,21 @@
   margin: 8px 0;
   overflow-wrap: anywhere;
 }
+
+/* Student profile navigation */
+
+.auth-navigation-link {
+  display: block;
+  text-align: center;
+  background: #2458d3;
+  color: #ffffff;
+  padding: 13px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+  margin: 10px 0;
+}
+
+.auth-navigation-link:hover {
+  background: #173e9c;
+}

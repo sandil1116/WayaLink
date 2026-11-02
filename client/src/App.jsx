@@ -1,27 +1,23 @@
 
 import { useEffect, useState } from "react";
+import { Routes, Route } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import Categories from "./components/Categories";
 import OpportunityCard from "./components/OpportunityCard";
+import OpportunityDetails from "./components/OpportunityDetails";
 import AdminDashboard from "./components/AdminDashboard";
 import AuthPage from "./components/AuthPage";
 import StudentDashboard from "./components/StudentDashboard";
+import StudentProfile from "./components/StudentProfile";
 
-function App() {
-  // Store opportunities received from the backend
+// Existing WayaLink homepage
+function HomePage() {
   const [opportunities, setOpportunities] = useState([]);
-
-  if (window.location.pathname === "/admin") {
-  return <AdminDashboard />;
-}
-
-  // Track loading and errors
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Fetch opportunities when the component loads
   useEffect(() => {
     const controller = new AbortController();
 
@@ -31,7 +27,7 @@ function App() {
         setError("");
 
         const response = await fetch("/api/opportunities", {
-          signal: controller.signal,
+          signal: controller.signal
         });
 
         if (!response.ok) {
@@ -61,22 +57,6 @@ function App() {
     return () => controller.abort();
   }, []);
 
-  if (window.location.pathname === "/admin") {
-  return <AdminDashboard />;
-}
-
-if (window.location.pathname === "/login") {
-  return <AuthPage initialMode="login" />;
-}
-
-if (window.location.pathname === "/register") {
-  return <AuthPage initialMode="register" />;
-}
-
-
-if (window.location.pathname === "/opportunities") {
-  return <StudentDashboard />;
-}
   return (
     <>
       <Navbar />
@@ -93,26 +73,20 @@ if (window.location.pathname === "/opportunities") {
             Explore the latest opportunities for students.
           </p>
 
-          {/* Loading message */}
           {loading && (
             <p>Loading opportunities...</p>
           )}
 
-          {/* Error message */}
           {error && (
-            <p role="alert">
-              Error: {error}
-            </p>
+            <p role="alert">Error: {error}</p>
           )}
 
-          {/* Empty state */}
           {!loading &&
             !error &&
             opportunities.length === 0 && (
               <p>No opportunities available yet.</p>
             )}
 
-          {/* Display opportunities from Express */}
           {!loading &&
             !error &&
             opportunities.length > 0 && (
@@ -131,6 +105,50 @@ if (window.location.pathname === "/opportunities") {
         </section>
       </main>
     </>
+  );
+}
+
+// WayaLink routes
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+
+      <Route
+        path="/admin"
+        element={<AdminDashboard />}
+      />
+
+      <Route
+        path="/login"
+        element={<AuthPage initialMode="login" />}
+      />
+
+      <Route
+        path="/register"
+        element={<AuthPage initialMode="register" />}
+      />
+
+      <Route
+        path="/opportunities"
+        element={<StudentDashboard />}
+      />
+
+      <Route path="/profile" element={<StudentProfile />} />
+
+      <Route path="/opportunities/:id" element={<OpportunityDetails />}
+/>
+
+      <Route
+        path="*"
+        element={
+          <main style={{ padding: "40px", textAlign: "center" }}>
+            <h1>404 - Page Not Found</h1>
+            <a href="/">Back to WayaLink Home</a>
+          </main>
+        }
+      />
+    </Routes>
   );
 }
 

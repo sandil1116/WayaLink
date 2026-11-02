@@ -1,30 +1,45 @@
 
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+
+import { useAuth } from "../context/AuthContext";
 import "./AuthPage.css";
 
 function AuthPage({ initialMode = "login" }) {
+  const navigate = useNavigate();
+
+  const { user, token, login, logout } = useAuth();
+
   const [mode, setMode] = useState(initialMode);
+
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: ""
   });
 
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileUser, setProfileUser] = useState(null);
 
+  // Update form values
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+
+    setForm((previous) => ({
+      ...previous,
+      [name]: value
+    }));
   };
 
+  // Student registration and login
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (loading) return;
+
     setError("");
     setSuccess("");
     setLoading(true);
@@ -56,41 +71,61 @@ function AuthPage({ initialMode = "login" }) {
         }
       );
 
-      const text = await response.text();
+      const responseText = await response.text();
+
       let data = {};
 
       try {
-        data = text ? JSON.parse(text) : {};
+        data = responseText
+          ? JSON.parse(responseText)
+          : {};
       } catch {
-        throw new Error("Invalid response from server");
+        throw new Error("Invalid response from backend");
       }
 
       if (!response.ok) {
         throw new Error(
-          data.message || `Request failed (${response.status})`
+          data.message ||
+          `Request failed (${response.status})`
         );
       }
 
       if (isRegister) {
+        // Switch to login after registration
         setMode("login");
+
         setForm({
           name: "",
-          email: form.email,
+          email: form.email.trim(),
           password: ""
         });
-        setSuccess("Account created! Please log in.");
+
+        setSuccess(
+          "Registration successful! Please log in."
+        );
       } else {
         if (!data.token || !data.user) {
           throw new Error("Incomplete login response");
         }
 
-        setToken(data.token);
-        setUser(data.user);
+        if (data.user.role !== "student") {
+          throw new Error(
+            "This page is for students. Administrators must use /admin."
+          );
+        }
+
+        // Store student session in AuthContext
+        login(data.user, data.token);
+
+        setProfileUser(null);
+
         setForm({
           name: "",
           email: "",
           password: ""
         });
+
+        setSuccess("Login successful!");
       }
     } catch (err) {
       setError(err.message);
@@ -99,8 +134,13 @@ function AuthPage({ initialMode = "login" }) {
     }
   };
 
+  // Refresh student profile from MongoDB
   const loadProfile = async () => {
+    if (!token || profileLoading) return;
+
     setError("");
+    setSuccess("");
+    setProfileLoading(true);
 
     try {
       const response = await fetch("/api/auth/me", {
@@ -109,61 +149,193 @@ function AuthPage({ initialMode = "login" }) {
         }
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
 
-      if (!response.ok) {
-        throw new Error(data.message || "Profile failed to load");
+      let data = {};
+
+      try {
+        data = responseText
+          ? JSON.parse(responseText)
+          : {};
+      } catch {
+        throw new Error("Invalid profile response");
       }
 
-      setUser(data.user);
+      if (!response.ok) {
+        if (response.status === 401) {
+          logout();
+          setProfileUser(null);
+        }
+
+        throw new Error(
+          data.message || "Failed to load profile"
+        );
+      }
+
+      if (!data.user) {
+        throw new Error("Profile information missing");
+      }
+
+      if (data.user.role !== "student") {
+        logout();
+        setProfileUser(null);
+        throw new Error("Student access required");
+      }
+
+      setProfileUser(data.user);
+
+      // Keep shared authentication context updated
+      login(data.user, token);
+
       setSuccess("Profile refreshed successfully!");
     } catch (err) {
       setError(err.message);
+    } finally {
+      setProfileLoading(false);
     }
   };
 
-  const logout = () => {
-    setToken("");
-    setUser(null);
+  // Logout
+  const handleLogout = () => {
+    logout();
+
+    setProfileUser(null);
+    setForm({
+      name: "",
+      email: "",
+      password: ""
+    });
+
     setError("");
     setSuccess("");
     setMode("login");
+
+    navigate("/login", { replace: true });
   };
 
-  if (user) {
+  const currentUser = profileUser || user;
+
+  // Logged-in student screen
+  if (currentUser?.role === "student" && token) {
     return (
       <main className="auth-page">
         <section className="auth-card">
           <h1>Welcome to WayaLink!</h1>
-          <p>You are successfully logged in.</p>
 
-          {error && <p className="auth-error">{error}</p>}
-          {success && <p className="auth-success">{success}</p>}
+          <p>
+            You are successfully logged in.
+            Explore opportunities and manage
+            your student account.
+          </p>
 
+          {error && (
+            <p
+              className="auth-error"
+              role="alert"
+            >
+              {error}
+            </p>
+          )}
+
+          {success && (
+            <p
+              className="auth-success"
+              role="status"
+            >
+              {success}
+            </p>
+          )}
+
+          {/* Student account information */}
           <div className="auth-profile">
-            <p><strong>Name:</strong> {user.name}</p>
-            <p><strong>Email:</strong> {user.email}</p>
-            <p><strong>Role:</strong> {user.role}</p>
+            <h2>Student Account</h2>
+
+            <p>
+              <strong>Name:</strong>{" "}
+              {currentUser.name}
+            </p>
+
+            <p>
+              <strong>Email:</strong>{" "}
+              {currentUser.email}
+            </p>
+
+            <p>
+              <strong>Role:</strong>{" "}
+              {currentUser.role}
+            </p>
           </div>
 
-          <button onClick={loadProfile}>
-            Refresh My Profile
+          {/* Profile navigation */}
+          <Link
+            to="/profile"
+            className="auth-navigation-link"
+          >
+            View My Profile
+          </Link>
+
+          <button
+            type="button"
+            onClick={loadProfile}
+            disabled={profileLoading}
+          >
+            {profileLoading
+              ? "Refreshing..."
+              : "Refresh My Profile"}
           </button>
 
-          <button className="auth-secondary" onClick={logout}>
+          {/* Opportunities navigation */}
+          <button
+            type="button"
+            onClick={() => navigate("/opportunities")}
+          >
+            Explore Opportunities
+          </button>
+
+          
+            <button
+            type="button"
+            onClick={() => navigate("/opportunities?view=saved")}
+            >
+            My Saved Opportunities
+            </button>
+
+
+          <button
+            type="button"
+            onClick={() => {
+              navigate("/opportunities");
+            }}
+          >
+            My Applications
+          </button>
+
+          {/* Logout */}
+          <button
+            type="button"
+            className="auth-secondary"
+            onClick={handleLogout}
+          >
             Logout
           </button>
 
-          <a href="/">Back to WayaLink Home</a>
+          <Link to="/">
+            Back to WayaLink Home
+          </Link>
         </section>
       </main>
     );
   }
 
+  // Student registration/login screen
   return (
     <main className="auth-page">
-      <form className="auth-card" onSubmit={handleSubmit}>
+      <form
+        className="auth-card"
+        onSubmit={handleSubmit}
+      >
         <h1>WayaLink</h1>
+
         <h2>
           {mode === "login"
             ? "Student Login"
@@ -174,51 +346,88 @@ function AuthPage({ initialMode = "login" }) {
           Discover opportunities and shape your future.
         </p>
 
-        {error && <p className="auth-error">{error}</p>}
-        {success && <p className="auth-success">{success}</p>}
+        {error && (
+          <p
+            className="auth-error"
+            role="alert"
+          >
+            {error}
+          </p>
+        )}
+
+        {success && (
+          <p
+            className="auth-success"
+            role="status"
+          >
+            {success}
+          </p>
+        )}
 
         {mode === "register" && (
           <>
-            <label htmlFor="student-name">Full Name</label>
+            <label htmlFor="student-name">
+              Full Name
+            </label>
+
             <input
               id="student-name"
               type="text"
               name="name"
               value={form.name}
               onChange={handleChange}
+              autoComplete="name"
               required
             />
           </>
         )}
 
-        <label htmlFor="student-email">Email</label>
+        <label htmlFor="student-email">
+          Email
+        </label>
+
         <input
           id="student-email"
           type="email"
           name="email"
           value={form.email}
           onChange={handleChange}
+          autoComplete="email"
           required
         />
 
-        <label htmlFor="student-password">Password</label>
+        <label htmlFor="student-password">
+          Password
+        </label>
+
         <input
           id="student-password"
           type="password"
           name="password"
           value={form.password}
           onChange={handleChange}
-          minLength={mode === "register" ? 12 : undefined}
+          autoComplete={
+            mode === "register"
+              ? "new-password"
+              : "current-password"
+          }
+          minLength={
+            mode === "register" ? 12 : undefined
+          }
           required
         />
 
         {mode === "register" && (
           <small>
-            Use at least 12 characters. Maximum 72 UTF-8 bytes.
+            Use at least 12 characters.
+            Maximum 72 UTF-8 bytes.
           </small>
         )}
 
-        <button disabled={loading} type="submit">
+        <button
+          type="submit"
+          disabled={loading}
+        >
           {loading
             ? "Please wait..."
             : mode === "login"
@@ -231,22 +440,35 @@ function AuthPage({ initialMode = "login" }) {
             ? "Don't have an account?"
             : "Already registered?"}
 
+          {" "}
+
           <button
             type="button"
             className="auth-link-button"
             onClick={() => {
               setMode(
-                mode === "login" ? "register" : "login"
+                mode === "login"
+                  ? "register"
+                  : "login"
               );
+
               setError("");
               setSuccess("");
+              setForm((previous) => ({
+                ...previous,
+                password: ""
+              }));
             }}
           >
-            {mode === "login" ? "Register" : "Login"}
+            {mode === "login"
+              ? "Register"
+              : "Login"}
           </button>
         </p>
 
-        <a href="/">Back to Home</a>
+        <Link to="/">
+          Back to Home
+        </Link>
       </form>
     </main>
   );

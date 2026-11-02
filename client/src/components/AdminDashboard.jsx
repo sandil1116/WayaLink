@@ -9,38 +9,48 @@ const emptyForm = {
   date: ""
 };
 
+async function readResponse(response) {
+  const text = await response.text();
+  let data = {};
+
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    throw new Error("Invalid API response");
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || `Request failed (${response.status})`
+    );
+  }
+
+  return data;
+}
+
 function AdminDashboard() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [token, setToken] = useState("");
   const [admin, setAdmin] = useState(null);
+
   const [opportunities, setOpportunities] = useState([]);
+  const [applications, setApplications] = useState([]);
+
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [applicationError, setApplicationError] = useState("");
+  const [applicationSuccess, setApplicationSuccess] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  const readResponse = async (response) => {
-    const text = await response.text();
-    let data = {};
-
-    try {
-      data = text ? JSON.parse(text) : {};
-    } catch {
-      throw new Error("Invalid API response");
-    }
-
-    if (!response.ok) {
-      throw new Error(
-        data.message || `Request failed (${response.status})`
-      );
-    }
-
-    return data;
-  };
+  const [deletingId, setDeletingId] = useState("");
+  const [applicationsLoading, setApplicationsLoading] = useState(false);
+  const [reviewingId, setReviewingId] = useState("");
 
   const loadOpportunities = async (signal) => {
     const response = await fetch("/api/opportunities", {
@@ -53,11 +63,36 @@ function AdminDashboard() {
       throw new Error("Unexpected opportunities response");
     }
 
-    setOpportunities(data);
+    if (!signal?.aborted) {
+      setOpportunities(data);
+    }
   };
 
+  const loadApplications = async (jwt, signal) => {
+    const response = await fetch("/api/applications", {
+      headers: {
+        Authorization: `Bearer ${jwt}`
+      },
+      signal
+    });
+
+    const data = await readResponse(response);
+
+    if (!Array.isArray(data)) {
+      throw new Error("Invalid applications response");
+    }
+
+    if (!signal?.aborted) {
+      setApplications(data);
+    }
+  };
+
+  // Load opportunities after admin login
   useEffect(() => {
-    if (!admin) return;
+    if (!admin || !token) {
+      setOpportunities([]);
+      return;
+    }
 
     const controller = new AbortController();
 
@@ -68,7 +103,39 @@ function AdminDashboard() {
     });
 
     return () => controller.abort();
-  }, [admin]);
+  }, [admin?.id, admin?._id, token]);
+
+  // Load student applications after admin login
+  useEffect(() => {
+    if (!admin || !token) {
+      setApplications([]);
+      setApplicationsLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    async function fetchApplications() {
+      setApplicationsLoading(true);
+      setApplicationError("");
+
+      try {
+        await loadApplications(token, controller.signal);
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          setApplicationError(err.message);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setApplicationsLoading(false);
+        }
+      }
+    }
+
+    fetchApplications();
+
+    return () => controller.abort();
+  }, [admin?.id, admin?._id, token]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -112,12 +179,17 @@ function AdminDashboard() {
     setToken("");
     setAdmin(null);
     setOpportunities([]);
+    setApplications([]);
+    setEmail("");
     setPassword("");
     setForm(emptyForm);
     setEditingId(null);
     setShowForm(false);
     setError("");
     setSuccess("");
+    setApplicationError("");
+    setApplicationSuccess("");
+    setReviewingId("");
   };
 
   const openCreateForm = () => {
@@ -151,9 +223,9 @@ function AdminDashboard() {
     }));
   };
 
+  // Create or edit opportunities
   const handleSave = async (e) => {
     e.preventDefault();
-
     if (saving) return;
 
     setSaving(true);
@@ -198,13 +270,17 @@ function AdminDashboard() {
     }
   };
 
+  // Delete opportunities
   const handleDelete = async (id) => {
+    if (deletingId) return;
+
     const confirmed = window.confirm(
       "Are you sure you want to delete this opportunity?"
     );
 
     if (!confirmed) return;
 
+    setDeletingId(id);
     setError("");
     setSuccess("");
 
@@ -220,6 +296,7 @@ function AdminDashboard() {
       );
 
       await readResponse(response);
+
       setOpportunities((previous) =>
         previous.filter((item) => item._id !== id)
       );
@@ -227,9 +304,82 @@ function AdminDashboard() {
       setSuccess("Opportunity deleted successfully!");
     } catch (err) {
       setError(err.message);
+    } finally {
+      setDeletingId("");
     }
   };
 
+  // Refresh student applications
+  const refreshApplications = async () => {
+    if (!admin || !token || applicationsLoading) return;
+
+    setApplicationsLoading(true);
+    setApplicationError("");
+    setApplicationSuccess("");
+
+    try {
+      await loadApplications(token);
+      setApplicationSuccess("Applications refreshed successfully!");
+    } catch (err) {
+      setApplicationError(err.message);
+    } finally {
+      setApplicationsLoading(false);
+    }
+  };
+
+  // Approve or reject student applications
+  const handleReview = async (applicationId, status) => {
+    if (reviewingId) return;
+
+    setReviewingId(applicationId);
+    setApplicationError("");
+    setApplicationSuccess("");
+
+    try {
+      const response = await fetch(
+        `/api/applications/${applicationId}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ status })
+        }
+      );
+
+      const data = await readResponse(response);
+
+      if (!data.application) {
+        throw new Error("Application response is incomplete");
+      }
+
+      setApplications((previous) =>
+        previous.map((application) =>
+          application._id === applicationId
+            ? {
+                ...application,
+                status: data.application.status
+              }
+            : application
+        )
+      );
+
+      setApplicationSuccess(
+        `Application ${status} successfully!`
+      );
+    } catch (err) {
+      setApplicationError(err.message);
+    } finally {
+      setReviewingId("");
+    }
+  };
+
+  const pendingApplications = applications.filter(
+    (application) => application.status === "pending"
+  ).length;
+
+  // Admin login screen
   if (!admin) {
     return (
       <div className="admin-page">
@@ -237,7 +387,11 @@ function AdminDashboard() {
           <h1>WayaLink Admin</h1>
           <p>Sign in with your administrator account.</p>
 
-          {error && <p className="admin-error">{error}</p>}
+          {error && (
+            <p className="admin-error" role="alert">
+              {error}
+            </p>
+          )}
 
           <label htmlFor="admin-email">Email</label>
           <input
@@ -265,6 +419,7 @@ function AdminDashboard() {
     );
   }
 
+  // Main dashboard
   return (
     <div className="admin-page">
       <div className="admin-container">
@@ -276,11 +431,15 @@ function AdminDashboard() {
           </div>
 
           <div className="admin-actions">
-            <button onClick={openCreateForm}>
+            <button
+              type="button"
+              onClick={openCreateForm}
+            >
               + Add Opportunity
             </button>
 
             <button
+              type="button"
               className="admin-logout"
               onClick={handleLogout}
             >
@@ -289,6 +448,7 @@ function AdminDashboard() {
           </div>
         </header>
 
+        {/* Statistics */}
         <div className="admin-stats">
           <div className="admin-stat">
             <h2>{opportunities.length}</h2>
@@ -305,23 +465,29 @@ function AdminDashboard() {
           </div>
 
           <div className="admin-stat">
-            <h2>
-              {opportunities.filter(
-                (item) => item.category === "Hackathon"
-              ).length}
-            </h2>
-            <p>Hackathons</p>
+            <h2>{applications.length}</h2>
+            <p>Total Applications</p>
+          </div>
+
+          <div className="admin-stat">
+            <h2>{pendingApplications}</h2>
+            <p>Pending Reviews</p>
           </div>
         </div>
 
         {error && (
-          <p className="admin-error">{error}</p>
+          <p className="admin-error" role="alert">
+            {error}
+          </p>
         )}
 
         {success && (
-          <p className="admin-success">{success}</p>
+          <p className="admin-success" role="status">
+            {success}
+          </p>
         )}
 
+        {/* Opportunity form */}
         {showForm && (
           <form className="admin-form" onSubmit={handleSave}>
             <h2>
@@ -404,6 +570,144 @@ function AdminDashboard() {
           </form>
         )}
 
+        {/* Student Application Review */}
+        <section className="admin-list admin-applications">
+          <div className="admin-applications-heading">
+            <div>
+              <h2>Student Applications</h2>
+              <p>
+                Review applications submitted by students.
+              </p>
+            </div>
+
+            <div className="admin-actions">
+              <button
+                type="button"
+                onClick={refreshApplications}
+                disabled={applicationsLoading}
+              >
+                {applicationsLoading
+                  ? "Refreshing..."
+                  : "Refresh Applications"}
+              </button>
+            </div>
+          </div>
+
+          {applicationError && (
+            <p className="admin-error" role="alert">
+              {applicationError}
+            </p>
+          )}
+
+          {applicationSuccess && (
+            <p className="admin-success" role="status">
+              {applicationSuccess}
+            </p>
+          )}
+
+          {applicationsLoading && (
+            <p>Loading student applications...</p>
+          )}
+
+          {!applicationsLoading &&
+            !applicationError &&
+            applications.length === 0 && (
+              <p>No student applications yet.</p>
+            )}
+
+          {!applicationsLoading &&
+            applications.map((application) => (
+              <div
+                className="admin-application-item"
+                key={application._id}
+              >
+                <div className="admin-application-info">
+                  <h3>
+                    {application.opportunity?.title ||
+                      "Opportunity unavailable"}
+                  </h3>
+
+                  <p>
+                    <strong>Student:</strong>{" "}
+                    {application.student?.name ||
+                      "Unknown student"}
+                  </p>
+
+                  <p>
+                    <strong>Email:</strong>{" "}
+                    {application.student?.email ||
+                      "Unavailable"}
+                  </p>
+
+                  {application.message && (
+                    <p>
+                      <strong>Message:</strong>{" "}
+                      {application.message}
+                    </p>
+                  )}
+
+                  <p>
+                    <strong>Applied:</strong>{" "}
+                    {application.createdAt
+                      ? new Date(
+                          application.createdAt
+                        ).toLocaleDateString()
+                      : "Date unavailable"}
+                  </p>
+
+                  <span
+                    className={`application-status ${
+                      application.status
+                    }`}
+                  >
+                    {application.status}
+                  </span>
+                </div>
+
+                <div className="admin-review-actions">
+                  <button
+                    type="button"
+                    className="admin-approve"
+                    onClick={() =>
+                      handleReview(
+                        application._id,
+                        "approved"
+                      )
+                    }
+                    disabled={
+                      Boolean(reviewingId) ||
+                      application.status === "approved"
+                    }
+                  >
+                    {reviewingId === application._id
+                      ? "Updating..."
+                      : "Approve"}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="admin-reject"
+                    onClick={() =>
+                      handleReview(
+                        application._id,
+                        "rejected"
+                      )
+                    }
+                    disabled={
+                      Boolean(reviewingId) ||
+                      application.status === "rejected"
+                    }
+                  >
+                    {reviewingId === application._id
+                      ? "Updating..."
+                      : "Reject"}
+                  </button>
+                </div>
+              </div>
+            ))}
+        </section>
+
+        {/* Opportunity Management */}
         <section className="admin-list">
           <h2>Manage Opportunities</h2>
 
@@ -425,6 +729,7 @@ function AdminDashboard() {
 
               <div className="admin-item-actions">
                 <button
+                  type="button"
                   className="admin-edit"
                   onClick={() => openEditForm(item)}
                 >
@@ -432,10 +737,14 @@ function AdminDashboard() {
                 </button>
 
                 <button
+                  type="button"
                   className="admin-delete"
+                  disabled={Boolean(deletingId)}
                   onClick={() => handleDelete(item._id)}
                 >
-                  Delete
+                  {deletingId === item._id
+                    ? "Deleting..."
+                    : "Delete"}
                 </button>
               </div>
             </div>
