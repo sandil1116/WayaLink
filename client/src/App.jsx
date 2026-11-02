@@ -5,10 +5,17 @@ import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import Categories from "./components/Categories";
 import OpportunityCard from "./components/OpportunityCard";
+import AdminDashboard from "./components/AdminDashboard";
+import AuthPage from "./components/AuthPage";
+import StudentDashboard from "./components/StudentDashboard";
 
 function App() {
   // Store opportunities received from the backend
   const [opportunities, setOpportunities] = useState([]);
+
+  if (window.location.pathname === "/admin") {
+  return <AdminDashboard />;
+}
 
   // Track loading and errors
   const [loading, setLoading] = useState(true);
@@ -54,6 +61,22 @@ function App() {
     return () => controller.abort();
   }, []);
 
+  if (window.location.pathname === "/admin") {
+  return <AdminDashboard />;
+}
+
+if (window.location.pathname === "/login") {
+  return <AuthPage initialMode="login" />;
+}
+
+if (window.location.pathname === "/register") {
+  return <AuthPage initialMode="register" />;
+}
+
+
+if (window.location.pathname === "/opportunities") {
+  return <StudentDashboard />;
+}
   return (
     <>
       <Navbar />
