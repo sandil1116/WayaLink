@@ -1,30 +1,46 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+  Link,
+  Navigate,
+  useNavigate
+} from "react-router-dom";
+
+import {
+  ArrowRight,
+  ArrowUpRight,
+  CalendarDays,
+  Eye,
+  EyeOff,
+  GraduationCap,
+  LockKeyhole,
+  Mail,
+  ShieldCheck,
+  Sparkles,
+  UserRound
+} from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
 import "./AuthPage.css";
 
 function AuthPage({ initialMode = "login" }) {
   const navigate = useNavigate();
-
-  const { user, token, login, logout } = useAuth();
+  const { user, token, authReady, login } = useAuth();
 
   const [mode, setMode] = useState(initialMode);
-
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: ""
   });
 
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [profileUser, setProfileUser] = useState(null);
 
-  // Update form values
+  const isRegister = mode === "register";
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -34,45 +50,52 @@ function AuthPage({ initialMode = "login" }) {
     }));
   };
 
-  // Student registration and login
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (loading) return;
-
+  const changeMode = (nextMode) => {
+    setMode(nextMode);
     setError("");
     setSuccess("");
-    setLoading(true);
+    setShowPassword(false);
 
-    const isRegister = mode === "register";
+    setForm((previous) => ({
+      ...previous,
+      password: ""
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (loading) return;
+
+    setLoading(true);
+    setError("");
+    setSuccess("");
 
     try {
-      const response = await fetch(
-        isRegister
-          ? "/api/auth/register"
-          : "/api/auth/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(
-            isRegister
-              ? {
-                  name: form.name.trim(),
-                  email: form.email.trim(),
-                  password: form.password
-                }
-              : {
-                  email: form.email.trim(),
-                  password: form.password
-                }
-          )
-        }
-      );
+      const endpoint = isRegister
+        ? "/api/auth/register"
+        : "/api/auth/login";
+
+      const payload = isRegister
+        ? {
+            name: form.name.trim(),
+            email: form.email.trim(),
+            password: form.password
+          }
+        : {
+            email: form.email.trim(),
+            password: form.password
+          };
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "same-origin",
+        body: JSON.stringify(payload)
+      });
 
       const responseText = await response.text();
-
       let data = {};
 
       try {
@@ -80,7 +103,7 @@ function AuthPage({ initialMode = "login" }) {
           ? JSON.parse(responseText)
           : {};
       } catch {
-        throw new Error("Invalid response from backend");
+        throw new Error("Invalid response from server");
       }
 
       if (!response.ok) {
@@ -91,41 +114,31 @@ function AuthPage({ initialMode = "login" }) {
       }
 
       if (isRegister) {
-        // Switch to login after registration
-        setMode("login");
-
         setForm({
           name: "",
           email: form.email.trim(),
           password: ""
         });
 
+        setMode("login");
         setSuccess(
-          "Registration successful! Please log in."
+          "Account created! Sign in to continue."
         );
       } else {
-        if (!data.token || !data.user) {
+        if (!data.user || !data.token) {
           throw new Error("Incomplete login response");
         }
 
         if (data.user.role !== "student") {
           throw new Error(
-            "This page is for students. Administrators must use /admin."
+            "Administrator accounts must sign in through /admin."
           );
         }
 
-        // Store student session in AuthContext
         login(data.user, data.token);
 
-        setProfileUser(null);
-
-        setForm({
-          name: "",
-          email: "",
-          password: ""
-        });
-
-        setSuccess("Login successful!");
+        // Go directly to the new student dashboard.
+        navigate("/profile", { replace: true });
       }
     } catch (err) {
       setError(err.message);
@@ -134,342 +147,301 @@ function AuthPage({ initialMode = "login" }) {
     }
   };
 
-  // Refresh student profile from MongoDB
-  const loadProfile = async () => {
-    if (!token || profileLoading) return;
-
-    setError("");
-    setSuccess("");
-    setProfileLoading(true);
-
-    try {
-      const response = await fetch("/api/auth/me", {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      const responseText = await response.text();
-
-      let data = {};
-
-      try {
-        data = responseText
-          ? JSON.parse(responseText)
-          : {};
-      } catch {
-        throw new Error("Invalid profile response");
-      }
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          logout();
-          setProfileUser(null);
-        }
-
-        throw new Error(
-          data.message || "Failed to load profile"
-        );
-      }
-
-      if (!data.user) {
-        throw new Error("Profile information missing");
-      }
-
-      if (data.user.role !== "student") {
-        logout();
-        setProfileUser(null);
-        throw new Error("Student access required");
-      }
-
-      setProfileUser(data.user);
-
-      // Keep shared authentication context updated
-      login(data.user, token);
-
-      setSuccess("Profile refreshed successfully!");
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setProfileLoading(false);
-    }
-  };
-
-  // Logout
-  const handleLogout = () => {
-    logout();
-
-    setProfileUser(null);
-    setForm({
-      name: "",
-      email: "",
-      password: ""
-    });
-
-    setError("");
-    setSuccess("");
-    setMode("login");
-
-    navigate("/login", { replace: true });
-  };
-
-  const currentUser = profileUser || user;
-
-  // Logged-in student screen
-  if (currentUser?.role === "student" && token) {
+  if (!authReady) {
     return (
-      <main className="auth-page">
-        <section className="auth-card">
-          <h1>Welcome to WayaLink!</h1>
-
-          <p>
-            You are successfully logged in.
-            Explore opportunities and manage
-            your student account.
-          </p>
-
-          {error && (
-            <p
-              className="auth-error"
-              role="alert"
-            >
-              {error}
-            </p>
-          )}
-
-          {success && (
-            <p
-              className="auth-success"
-              role="status"
-            >
-              {success}
-            </p>
-          )}
-
-          {/* Student account information */}
-          <div className="auth-profile">
-            <h2>Student Account</h2>
-
-            <p>
-              <strong>Name:</strong>{" "}
-              {currentUser.name}
-            </p>
-
-            <p>
-              <strong>Email:</strong>{" "}
-              {currentUser.email}
-            </p>
-
-            <p>
-              <strong>Role:</strong>{" "}
-              {currentUser.role}
-            </p>
-          </div>
-
-          {/* Profile navigation */}
-          <Link
-            to="/profile"
-            className="auth-navigation-link"
-          >
-            View My Profile
-          </Link>
-
-          <button
-            type="button"
-            onClick={loadProfile}
-            disabled={profileLoading}
-          >
-            {profileLoading
-              ? "Refreshing..."
-              : "Refresh My Profile"}
-          </button>
-
-          {/* Opportunities navigation */}
-          <button
-            type="button"
-            onClick={() => navigate("/opportunities")}
-          >
-            Explore Opportunities
-          </button>
-
-          
-            <button
-            type="button"
-            onClick={() => navigate("/opportunities?view=saved")}
-            >
-            My Saved Opportunities
-            </button>
-
-
-          <button
-            type="button"
-            onClick={() => {
-              navigate("/opportunities");
-            }}
-          >
-            My Applications
-          </button>
-
-          {/* Logout */}
-          <button
-            type="button"
-            className="auth-secondary"
-            onClick={handleLogout}
-          >
-            Logout
-          </button>
-
-          <Link to="/">
-            Back to WayaLink Home
-          </Link>
-        </section>
+      <main className="auth2-loading">
+        <span className="auth2-spinner" />
+        <p>Preparing WayaLink...</p>
       </main>
     );
   }
 
-  // Student registration/login screen
+  if (user?.role === "admin" && token) {
+  return <Navigate to="/admin" replace />;
+}
+  // Returning students skip the login screen.
+  if (user?.role === "student" && token) {
+    return <Navigate to="/profile" replace />;
+  }
+
   return (
-    <main className="auth-page">
-      <form
-        className="auth-card"
-        onSubmit={handleSubmit}
-      >
-        <h1>WayaLink</h1>
+    <main className="auth2-page">
+      <div className="auth2-shell">
 
-        <h2>
-          {mode === "login"
-            ? "Student Login"
-            : "Create Student Account"}
-        </h2>
+        {/* Left visual panel */}
+        <section className="auth2-showcase">
+          <Link to="/" className="auth2-logo">
+            <span className="auth2-logo-icon">
+              <GraduationCap size={24} />
+            </span>
+            WayaLink
+          </Link>
 
-        <p>
-          Discover opportunities and shape your future.
-        </p>
+          <div className="auth2-showcase-content">
+            <span className="auth2-overline">
+              YOUR CAMPUS. YOUR FUTURE.
+            </span>
 
-        {error && (
-          <p
-            className="auth-error"
-            role="alert"
-          >
-            {error}
-          </p>
-        )}
+            <h1>
+              Your next big
+              <br />
+              opportunity
+              <br />
+              <span>starts here.</span>
+            </h1>
 
-        {success && (
-          <p
-            className="auth-success"
-            role="status"
-          >
-            {success}
-          </p>
-        )}
+            <p>
+              One intelligent platform for discovering
+              university events, building your career,
+              and connecting with opportunities
+              that matter.
+            </p>
 
-        {mode === "register" && (
-          <>
-            <label htmlFor="student-name">
-              Full Name
-            </label>
+            <div className="auth2-feature-stack">
+              <div className="auth2-feature">
+                <div className="auth2-feature-icon">
+                  <Sparkles size={20} />
+                </div>
+                <div>
+                  <strong>AI-powered discovery</strong>
+                  <small>
+                    Discover opportunities with Gemini AI.
+                  </small>
+                </div>
+              </div>
 
-            <input
-              id="student-name"
-              type="text"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              autoComplete="name"
-              required
-            />
-          </>
-        )}
+              <div className="auth2-feature">
+                <div className="auth2-feature-icon">
+                  <CalendarDays size={20} />
+                </div>
+                <div>
+                  <strong>Everything in one place</strong>
+                  <small>
+                    Manage applications, saved listings,
+                    and your progress.
+                  </small>
+                </div>
+              </div>
 
-        <label htmlFor="student-email">
-          Email
-        </label>
+              <div className="auth2-feature">
+                <div className="auth2-feature-icon">
+                  <ShieldCheck size={20} />
+                </div>
+                <div>
+                  <strong>Your personal workspace</strong>
+                  <small>
+                    A secure dashboard built for students.
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        <input
-          id="student-email"
-          type="email"
-          name="email"
-          value={form.email}
-          onChange={handleChange}
-          autoComplete="email"
-          required
-        />
+          <div className="auth2-showcase-footer">
+            Designed for ambitious students.
+            <ArrowUpRight size={17} />
+          </div>
+        </section>
 
-        <label htmlFor="student-password">
-          Password
-        </label>
+        {/* Right authentication panel */}
+        <section className="auth2-form-side">
+          <div className="auth2-form-top">
+            <span className="auth2-mobile-brand">
+              WayaLink
+            </span>
 
-        <input
-          id="student-password"
-          type="password"
-          name="password"
-          value={form.password}
-          onChange={handleChange}
-          autoComplete={
-            mode === "register"
-              ? "new-password"
-              : "current-password"
-          }
-          minLength={
-            mode === "register" ? 12 : undefined
-          }
-          required
-        />
+            <Link to="/" className="auth2-back">
+              Back to home <ArrowUpRight size={16} />
+            </Link>
+          </div>
 
-        {mode === "register" && (
-          <small>
-            Use at least 12 characters.
-            Maximum 72 UTF-8 bytes.
-          </small>
-        )}
+          <div className="auth2-form-container">
+            <div className="auth2-form-heading">
+              <span className="auth2-kicker">
+                STUDENT PORTAL
+              </span>
 
-        <button
-          type="submit"
-          disabled={loading}
-        >
-          {loading
-            ? "Please wait..."
-            : mode === "login"
-              ? "Login"
-              : "Create Account"}
-        </button>
+              <h2>
+                {isRegister
+                  ? "Create your account"
+                  : "Welcome back"}
+              </h2>
 
-        <p className="auth-switch">
-          {mode === "login"
-            ? "Don't have an account?"
-            : "Already registered?"}
+              <p>
+                {isRegister
+                  ? "Join WayaLink and begin your journey."
+                  : "Sign in to access your personal workspace."}
+              </p>
+            </div>
 
-          {" "}
+            <div className="auth2-mode-tabs">
+              <button
+                type="button"
+                className={!isRegister ? "active" : ""}
+                onClick={() => changeMode("login")}
+              >
+                Sign In
+              </button>
 
-          <button
-            type="button"
-            className="auth-link-button"
-            onClick={() => {
-              setMode(
-                mode === "login"
-                  ? "register"
-                  : "login"
-              );
+              <button
+                type="button"
+                className={isRegister ? "active" : ""}
+                onClick={() => changeMode("register")}
+              >
+                Create Account
+              </button>
+            </div>
 
-              setError("");
-              setSuccess("");
-              setForm((previous) => ({
-                ...previous,
-                password: ""
-              }));
-            }}
-          >
-            {mode === "login"
-              ? "Register"
-              : "Login"}
-          </button>
-        </p>
+            {error && (
+              <div className="auth2-alert auth2-error" role="alert">
+                {error}
+              </div>
+            )}
 
-        <Link to="/">
-          Back to Home
-        </Link>
-      </form>
+            {success && (
+              <div className="auth2-alert auth2-success" role="status">
+                {success}
+              </div>
+            )}
+
+            <form
+              className="auth2-form"
+              onSubmit={handleSubmit}
+            >
+              {isRegister && (
+                <div className="auth2-field">
+                  <label htmlFor="auth2-name">
+                    Full name
+                  </label>
+
+                  <div className="auth2-input-wrap">
+                    <UserRound size={19} />
+
+                    <input
+                      id="auth2-name"
+                      type="text"
+                      name="name"
+                      placeholder="Your full name"
+                      autoComplete="name"
+                      value={form.name}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="auth2-field">
+                <label htmlFor="auth2-email">
+                  Email address
+                </label>
+
+                <div className="auth2-input-wrap">
+                  <Mail size={19} />
+
+                  <input
+                    id="auth2-email"
+                    type="email"
+                    name="email"
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="auth2-field">
+                <label htmlFor="auth2-password">
+                  Password
+                </label>
+
+                <div className="auth2-input-wrap">
+                  <LockKeyhole size={19} />
+
+                  <input
+                    id="auth2-password"
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="Enter your password"
+                    autoComplete={
+                      isRegister
+                        ? "new-password"
+                        : "current-password"
+                    }
+                    value={form.password}
+                    onChange={handleChange}
+                    minLength={
+                      isRegister ? 12 : undefined
+                    }
+                    required
+                  />
+
+                  <button
+                    type="button"
+                    className="auth2-eye"
+                    onClick={() =>
+                      setShowPassword((value) => !value)
+                    }
+                    aria-label={
+                      showPassword
+                        ? "Hide password"
+                        : "Show password"
+                    }
+                  >
+                    {showPassword
+                      ? <EyeOff size={18} />
+                      : <Eye size={18} />}
+                  </button>
+                </div>
+
+                {isRegister && (
+                  <small className="auth2-help">
+                    Minimum 12 characters, maximum 72 UTF-8 bytes.
+                  </small>
+                )}
+              </div>
+
+              <button
+                className="auth2-submit"
+                type="submit"
+                disabled={loading}
+              >
+                {loading
+                  ? "Please wait..."
+                  : isRegister
+                    ? "Create my account"
+                    : "Go to my dashboard"}
+
+                {!loading && <ArrowRight size={19} />}
+              </button>
+            </form>
+
+            <p className="auth2-switch-text">
+              {isRegister
+                ? "Already have an account?"
+                : "New to WayaLink?"}
+
+              <button
+                type="button"
+                onClick={() =>
+                  changeMode(
+                    isRegister ? "login" : "register"
+                  )
+                }
+              >
+                {isRegister ? "Sign in" : "Create an account"}
+              </button>
+            </p>
+          </div>
+
+          <div className="auth2-bottom-note">
+            <ShieldCheck size={15} />
+            Secure access to your WayaLink student workspace
+          </div>
+        </section>
+      </div>
     </main>
   );
 }
