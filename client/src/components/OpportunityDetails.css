@@ -1,0 +1,160 @@
+
+.details-page {
+  min-height: 100vh;
+  background: #f4f7fc;
+  padding: 35px 20px;
+  color: #17356b;
+}
+
+.details-container {
+  max-width: 850px;
+  margin: 0 auto;
+}
+
+.details-back {
+  display: inline-block;
+  color: #2458d3;
+  text-decoration: none;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.details-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 35px;
+}
+
+.details-category {
+  background: #e0eaff;
+  color: #2458d3;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.details-card h1 {
+  font-size: 34px;
+  margin: 25px 0 12px;
+}
+
+.details-card h2 {
+  font-size: 21px;
+  margin-top: 28px;
+}
+
+.details-date {
+  color: #64748b;
+}
+
+.details-description {
+  white-space: pre-wrap;
+  line-height: 1.8;
+  color: #475569;
+}
+
+.details-actions {
+  margin-top: 30px;
+  padding-top: 25px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.details-save,
+.details-button {
+  display: inline-block;
+  border: none;
+  border-radius: 8px;
+  padding: 13px 20px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.details-save {
+  background: #e0eaff;
+  color: #17356b;
+  margin-bottom: 20px;
+}
+
+.details-button {
+  background: #2458d3;
+  color: white;
+  text-decoration: none;
+}
+
+.details-button:disabled,
+.details-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.details-apply-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.details-apply-form textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.details-application-status {
+  margin-top: 10px;
+}
+
+.details-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+.details-success {
+  background: #dcfce7;
+  color: #166534;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+
+.application-status {
+  padding: 7px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.application-status.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.application-status.approved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.application-status.rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+@media (max-width: 650px) {
+  .details-card {
+    padding: 22px;
+  }
+
+  .details-card h1 {
+    font-size: 27px;
+  }
+}

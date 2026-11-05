@@ -400,3 +400,21 @@
 .student-details-link:hover {
   background: #e0eaff;
 }
+
+
+
+.student-ai-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 18px;
+  border-radius: 9px;
+  background: #2458d3;
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.student-ai-button:hover {
+  background: #1947b1;
+}

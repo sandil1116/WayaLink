@@ -1,184 +1,442 @@
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
 
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
+/* ==========================================
+   WAYALINK 2.0 — APP.CSS
+   Homepage & Shared Visual Enhancements
+========================================== */
+
+/*
+  IMPORTANT:
+  Global resets and typography are in index.css.
+
+  Individual pages use their own CSS:
+  - StudentProfile.css
+  - StudentDashboard.css
+  - AuthPage.css
+  - AICopilot.css
+  - SmartMatch.css
+  - AdminDashboard.css
+
+  Do not add global #root or main restrictions here.
+*/
+
+/* ==========================================
+   HOMEPAGE LAYOUT
+========================================== */
+
+.home-page {
+  min-height: 100vh;
+  background: #f5f7fc;
 }
+
+.home-main {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 45px 24px 75px;
+}
+
+/* ==========================================
+   NAVBAR ENHANCEMENTS
+========================================== */
+
+.navbar {
+  position: relative;
+  z-index: 10;
+
+  background: rgba(255, 255, 255, 0.98);
+
+  box-shadow: 0 2px 12px rgba(
+    23, 43, 77, 0.025
+  );
+}
+
+.navbar h2 {
+  letter-spacing: -0.8px;
+}
+
+.nav-links a {
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.nav-links a:hover {
+  color: #315fe6;
+}
+
+.login-btn {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+
+  box-shadow: 0 8px 22px rgba(
+    49, 95, 230, 0.18
+  );
+}
+
+/* ==========================================
+   HERO ENHANCEMENTS
+========================================== */
 
 .hero {
-  position: relative;
+  overflow: hidden;
 
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(108, 99, 255, 0.08),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 0% 100%,
+      rgba(59, 130, 246, 0.06),
+      transparent 36%
+    ),
+    #ffffff;
 
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
+  box-shadow: 0 14px 40px rgba(
+    23, 43, 77, 0.045
+  );
 }
 
-#center {
+.hero-badge {
+  letter-spacing: 0.2px;
+}
+
+.hero-title {
+  letter-spacing: -1.3px;
+  font-weight: 800;
+}
+
+.hero-description {
+  line-height: 1.85;
+}
+
+/* ==========================================
+   HOMEPAGE BUTTONS
+========================================== */
+
+/*
+  These classes are available for homepage
+  CTA links and buttons.
+*/
+
+.home-button-primary,
+.home-button-secondary {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+
+  padding: 13px 22px;
+
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 750;
+
+  text-decoration: none;
+  border: 1px solid transparent;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.home-button-primary {
+  background: linear-gradient(
+    110deg,
+    #315fe6,
+    #624dd8
+  );
+
+  color: white;
+}
+
+.home-button-primary:hover {
+  color: white;
+  transform: translateY(-2px);
+
+  box-shadow: 0 10px 24px rgba(
+    49, 95, 230, 0.2
+  );
+}
+
+.home-button-secondary {
+  background: white;
+  color: #315fe6;
+  border-color: #dbe5ff;
+}
+
+.home-button-secondary:hover {
+  background: #eef2ff;
+  transform: translateY(-2px);
+}
+
+/* ==========================================
+   CATEGORIES
+========================================== */
+
+.categories {
+  position: relative;
+}
+
+.category-card {
+  position: relative;
+  overflow: hidden;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.category-card:hover {
+  transform: translateY(-4px);
+
+  border-color: #ccd9ff;
+
+  box-shadow: 0 14px 30px rgba(
+    23, 43, 77, 0.08
+  );
+}
+
+.category-card h3 {
+  transition: color 0.2s ease;
+}
+
+.category-card:hover h3 {
+  color: #315fe6;
+}
+
+/* ==========================================
+   FEATURED OPPORTUNITIES
+========================================== */
+
+.featured-opportunities {
+  position: relative;
+}
+
+.opportunity-card {
+  position: relative;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.opportunity-card:hover {
+  transform: translateY(-4px);
+
+  border-color: #d4dfff;
+
+  box-shadow: 0 16px 34px rgba(
+    23, 43, 77, 0.08
+  );
+}
+
+.opportunity-card h3 {
+  transition: color 0.2s ease;
+}
+
+.opportunity-card:hover h3 {
+  color: #315fe6;
+}
+
+.opportunity-tag {
+  align-self: flex-start;
+}
+
+/* ==========================================
+   OPTIONAL HOMEPAGE SECTION HEADING
+========================================== */
+
+.home-section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.home-section-heading h2 {
+  font-size: clamp(25px, 3vw, 32px);
+  letter-spacing: -0.7px;
+  margin: 0 0 10px;
+  color: #17356b;
+}
+
+.home-section-heading p {
+  color: #64748b;
+  margin: 0;
+  font-size: 14px;
+}
+
+.home-section-link {
+  color: #315fe6;
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.home-section-link:hover {
+  color: #624dd8;
+}
+
+/* ==========================================
+   OPTIONAL HOMEPAGE FOOTER
+========================================== */
+
+.home-footer {
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  padding: 30px 24px;
+}
+
+.home-footer-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+
+  gap: 20px;
+}
+
+.home-footer p {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.home-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.home-footer-links a {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.home-footer-links a:hover {
+  color: #315fe6;
+}
+
+/* ==========================================
+   LOADING AND EMPTY STATES
+========================================== */
+
+.home-loading,
+.home-empty {
   display: flex;
   flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
+  justify-content: center;
+  align-items: center;
 
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
+  text-align: center;
+
+  padding: 45px 25px;
+
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+
+  color: #64748b;
+}
+
+.home-empty h3 {
+  font-size: 18px;
+  color: #17356b;
+  margin: 0 0 10px;
+}
+
+.home-empty p {
+  font-size: 14px;
+  color: #64748b;
+  max-width: 400px;
+  line-height: 1.7;
+}
+
+/* ==========================================
+   TABLET RESPONSIVENESS
+========================================== */
+
+@media (max-width: 900px) {
+  .home-main {
+    padding: 34px 22px 60px;
+  }
+
+  .home-section-heading {
+    align-items: flex-start;
   }
 }
 
-#next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
+/* ==========================================
+   MOBILE RESPONSIVENESS
+========================================== */
 
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
+@media (max-width: 600px) {
+  .home-main {
+    padding: 25px 16px 45px;
   }
 
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
+  .hero {
+    border-radius: 15px;
   }
 
-  @media (max-width: 1024px) {
+  .hero-title {
+    letter-spacing: -0.8px;
+  }
+
+  .home-button-primary,
+  .home-button-secondary {
+    padding: 12px 18px;
+    font-size: 13px;
+  }
+
+  .home-section-heading {
     flex-direction: column;
-    text-align: center;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .home-footer-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .home-footer {
+    padding: 25px 18px;
   }
 }
 
-#docs {
-  border-right: 1px solid var(--border);
+/* ==========================================
+   ACCESSIBILITY
+========================================== */
 
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-}
-
-#next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
-}
-
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
-}
-
-.ticks {
-  position: relative;
-  width: 100%;
-
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
-  }
-
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
-  }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
+@media (prefers-reduced-motion: reduce) {
+  .navbar a,
+  .login-btn,
+  .hero,
+  .category-card,
+  .opportunity-card,
+  .home-button-primary,
+  .home-button-secondary {
+    transition: none !important;
+    transform: none !important;
   }
 }

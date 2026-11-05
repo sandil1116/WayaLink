@@ -29,7 +29,7 @@ async function readResponse(response) {
 }
 
 function AdminDashboard() {
-  const [email, setEmail] = useState("");
+  const [loginIdentifier, setLoginIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [token, setToken] = useState("");
   const [admin, setAdmin] = useState(null);
@@ -150,7 +150,7 @@ function AdminDashboard() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          email: email.trim(),
+          email: loginIdentifier.trim(),
           password
         })
       });
@@ -180,7 +180,7 @@ function AdminDashboard() {
     setAdmin(null);
     setOpportunities([]);
     setApplications([]);
-    setEmail("");
+    setLoginIdentifier("");
     setPassword("");
     setForm(emptyForm);
     setEditingId(null);
@@ -393,12 +393,13 @@ function AdminDashboard() {
             </p>
           )}
 
-          <label htmlFor="admin-email">Email</label>
+          <label htmlFor="admin-email">Email or username</label>
           <input
             id="admin-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            autoComplete="username"
+            value={loginIdentifier}
+            onChange={(e) => setLoginIdentifier(e.target.value)}
             required
           />
 

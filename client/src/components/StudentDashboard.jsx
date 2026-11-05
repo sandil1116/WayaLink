@@ -509,6 +509,20 @@ function StudentDashboard() {
             >
               All Opportunities
             </button>
+          
+            <Link
+              to="/ai"
+              className="student-ai-button"
+            >
+              ✨ Ask WayaLink AI
+            </Link>
+
+                <Link
+                   to="/smart-match"
+                  className="student-ai-button"
+                >
+      ✨ Find My Matches
+    </Link>
 
             <button
               type="button"
