@@ -476,3 +476,16 @@
     flex-direction: column;
   }
 }
+/* WayaLink 2.0 shared navigation integration */
+
+.ai-page {
+  padding-top: 18px;
+}
+
+.ai-container > .wsn-header {
+  margin-bottom: 28px;
+}
+
+.ai-hero {
+  padding-top: 10px;
+}

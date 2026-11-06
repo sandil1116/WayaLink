@@ -1,51 +1,163 @@
 
+/* ==========================================
+   WAYALINK 2.0
+   GLOBAL DESIGN SYSTEM
+========================================== */
+
 :root {
-  font-family: Arial, sans-serif;
-  color: #172B4D;
-  background-color: #F4F7FC;
+  font-family: Inter, Arial, Helvetica, sans-serif;
+  color: #172b4d;
+  background-color: #f5f7fc;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --primary: #315fe6;
+  --primary-dark: #2449b8;
+  --secondary: #694de2;
+
+  --text-primary: #172b4d;
+  --text-secondary: #64748b;
+
+  --background: #f5f7fc;
+  --surface: #ffffff;
+
+  --border: #e2e8f0;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --shadow-sm: 0 4px 15px rgba(23, 43, 77, 0.04);
+  --shadow-md: 0 12px 30px rgba(23, 43, 77, 0.07);
 }
 
-* {
+/* ==========================================
+   GLOBAL RESET
+========================================== */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
   min-width: 320px;
+  min-height: 100vh;
+  display: block;
+  background: var(--background);
+  color: var(--text-primary);
 }
 
-main {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 80px 24px;
-  text-align: center;
+#root {
+  width: 100%;
+  min-height: 100vh;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  text-align: initial;
 }
 
-h1 {
-  color: #17356B;
-  font-size: 48px;
-  margin-bottom: 16px;
+/* No global width or center alignment on main.
+   Each page controls its own layout. */
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+a {
+  transition: color 0.2s ease;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+img {
+  display: block;
+}
+
+:focus-visible {
+  outline: 3px solid #8ba5ff;
+  outline-offset: 3px;
+}
+
+/* ==========================================
+   TYPOGRAPHY
+========================================== */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: inherit;
 }
 
 p {
-  color: #64748B;
-  font-size: 18px;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
+/* ==========================================
+   HOMEPAGE CONTAINER
 
+   Use className="home-main" for the
+   homepage's main content container.
+
+   The classless main fallback supports
+   a simple existing homepage layout.
+========================================== */
+
+.home-main,
+main:not([class]) {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 45px 24px 70px;
+}
+
+/* ==========================================
+   HOMEPAGE NAVBAR
+========================================== */
 
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 48px;
-  background-color: white;
-  border-bottom: 1px solid #E2E8F0;
+  gap: 24px;
+
+  padding: 18px 48px;
+
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
 }
 
 .navbar h2 {
-  color: #17356B;
+  color: #17356b;
+  font-size: 25px;
+  font-weight: 800;
+  letter-spacing: -0.7px;
   margin: 0;
 }
 
@@ -53,109 +165,171 @@ p {
   display: flex;
   align-items: center;
   gap: 24px;
+  flex-wrap: wrap;
 }
 
 .nav-links a {
-  color: #172B4D;
+  color: #172b4d;
+  font-size: 14px;
+  font-weight: 600;
   text-decoration: none;
 }
 
+.nav-links a:hover {
+  color: var(--primary);
+}
+
 .nav-links span {
-  color: #172B4D;
+  color: #172b4d;
 }
 
-.login-btn {
-  background-color: #2458D3;
+.nav-links .login-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(
+    110deg,
+    #315fe6,
+    #624dd8
+  );
+
   color: white !important;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 600;
+
+  padding: 11px 20px;
+  border-radius: 9px;
+  font-weight: 700;
+  text-decoration: none;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
+.nav-links .login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(49, 95, 230, 0.2);
+}
+
+/* ==========================================
+   HOMEPAGE HERO
+========================================== */
 
 .hero {
-  background-color: white;
-  padding: 70px 40px;
-  border-radius: 16px;
+  position: relative;
+
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+
+  padding: 75px 40px;
   text-align: center;
-  border: 1px solid #E2E8F0;
+
+  box-shadow: var(--shadow-sm);
 }
 
 .hero-badge {
   display: inline-block;
-  background-color: #E5EDFF;
-  color: #2458D3;
+
+  background: #e9efff;
+  color: #315fe6;
+
   padding: 10px 18px;
   border-radius: 30px;
-  font-size: 14px;
-  font-weight: 600;
+
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .hero-title {
-  color: #17356B;
-  font-size: 48px;
+  color: #17356b;
+
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 800;
   line-height: 1.2;
-  margin-top: 28px;
+
+  letter-spacing: -1.2px;
+
+  margin: 28px 0 16px;
 }
 
 .hero-description {
-  color: #64748B;
-  max-width: 600px;
+  color: #64748b;
+
+  max-width: 650px;
   margin: 24px auto 0;
-  font-size: 18px;
-  line-height: 1.7;
+
+  font-size: 17px;
+  line-height: 1.8;
 }
 
-@media (max-width: 600px) {
-  .hero {
-    padding: 48px 20px;
-  }
-
-  .hero-title {
-    font-size: 32px;
-  }
-}
-
-
-
+/* ==========================================
+   OPPORTUNITY CATEGORIES
+========================================== */
 
 .categories {
-  padding: 60px 0;
+  padding: 65px 0;
   text-align: left;
 }
 
 .categories h2 {
-  color: #17356B;
+  color: #17356b;
+
   font-size: 30px;
-  margin-bottom: 10px;
+  font-weight: 800;
+
+  margin: 0 0 12px;
+  letter-spacing: -0.5px;
 }
 
 .category-grid {
   display: grid;
+
   grid-template-columns: repeat(
     auto-fit,
     minmax(220px, 1fr)
   );
+
   gap: 24px;
   margin-top: 30px;
 }
 
 .category-card {
-  background-color: white;
+  background: white;
+
   padding: 28px;
-  border-radius: 12px;
-  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+
+  border: 1px solid var(--border);
+
+  box-shadow: var(--shadow-sm);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
 }
 
 .category-card h3 {
-  color: #17356B;
-  margin-top: 0;
+  color: #17356b;
+  font-size: 19px;
+  margin: 0 0 12px;
 }
 
 .category-card p {
-  font-size: 15px;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: 0;
 }
 
+/* ==========================================
+   FEATURED OPPORTUNITIES
+========================================== */
 
 .featured-opportunities {
   padding: 30px 0 70px;
@@ -163,48 +337,183 @@ p {
 }
 
 .featured-opportunities h2 {
-  color: #17356B;
+  color: #17356b;
+
   font-size: 30px;
+  font-weight: 800;
+
+  margin-bottom: 12px;
 }
 
 .opportunity-grid {
   display: grid;
+
   grid-template-columns: repeat(
     auto-fit,
     minmax(240px, 1fr)
   );
+
   gap: 24px;
   margin-top: 30px;
 }
 
 .opportunity-card {
-  background-color: white;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+
+  background: white;
+  border: 1px solid var(--border);
+
+  border-radius: 14px;
   padding: 24px;
+
+  box-shadow: var(--shadow-sm);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.opportunity-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
 }
 
 .opportunity-card h3 {
-  color: #17356B;
+  color: #17356b;
   font-size: 20px;
-  margin-top: 20px;
+  line-height: 1.4;
+  margin: 20px 0 10px;
 }
 
 .opportunity-card p {
-  font-size: 15px;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.75;
 }
 
 .opportunity-tag {
+  align-self: flex-start;
+
   display: inline-block;
-  background-color: #E5EDFF;
-  color: #2458D3;
-  padding: 6px 12px;
+
+  background: #e9efff;
+  color: #315fe6;
+
+  padding: 7px 13px;
   border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
+
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .opportunity-date {
-  margin-top: 24px;
-  color: #64748B;
+  margin-top: auto;
+  padding-top: 20px;
+
+  color: #64748b;
+  font-size: 13px;
+}
+
+/* ==========================================
+   TABLET RESPONSIVENESS
+========================================== */
+
+@media (max-width: 900px) {
+  .navbar {
+    padding: 18px 25px;
+  }
+
+  .nav-links {
+    gap: 15px;
+  }
+
+  .hero {
+    padding: 60px 28px;
+  }
+
+  .category-grid,
+  .opportunity-grid {
+    gap: 18px;
+  }
+}
+
+/* ==========================================
+   MOBILE RESPONSIVENESS
+========================================== */
+
+@media (max-width: 600px) {
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+
+    padding: 18px 20px;
+  }
+
+  .nav-links {
+    gap: 14px;
+    width: 100%;
+  }
+
+  .nav-links a {
+    font-size: 13px;
+  }
+
+  .home-main,
+  main:not([class]) {
+    padding: 25px 16px 45px;
+  }
+
+  .hero {
+    padding: 48px 20px;
+    border-radius: 15px;
+  }
+
+  .hero-title {
+    font-size: 32px;
+    letter-spacing: -0.8px;
+  }
+
+  .hero-description {
+    font-size: 15px;
+  }
+
+  .categories {
+    padding: 45px 0;
+  }
+
+  .categories h2,
+  .featured-opportunities h2 {
+    font-size: 25px;
+  }
+
+  .category-grid,
+  .opportunity-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .category-card,
+  .opportunity-card {
+    padding: 22px;
+  }
+
+  .featured-opportunities {
+    padding: 25px 0 50px;
+  }
+}
+
+/* ==========================================
+   ACCESSIBILITY
+========================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -11,6 +11,12 @@ import AdminDashboard from "./components/AdminDashboard";
 import AuthPage from "./components/AuthPage";
 import StudentDashboard from "./components/StudentDashboard";
 import StudentProfile from "./components/StudentProfile";
+import AICopilot from "./components/AICopilot";
+import SmartMatch from "./components/SmartMatch";
+import WayaHome from "./components/WayaHome";
+import AdminLogin from "./components/AdminLogin";
+import AdminWorkspace from "./components/AdminWorkspace";
+import OpportunityDirectory from "./components/OpportunityDirectory";
 
 // Existing WayaLink homepage
 function HomePage() {
@@ -112,12 +118,16 @@ function HomePage() {
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
 
       <Route
-        path="/admin"
-        element={<AdminDashboard />}
-      />
+  path="/admin/login"
+  element={<AdminLogin />}
+/>
+
+<Route
+  path="/admin"
+  element={<AdminWorkspace />}
+/>
 
       <Route
         path="/login"
@@ -129,13 +139,17 @@ function App() {
         element={<AuthPage initialMode="register" />}
       />
 
+      <Route path="/ai" element={<AICopilot />} />
+      <Route path="/smart-match" element={<SmartMatch />} />
+      
+
       <Route
-        path="/opportunities"
-        element={<StudentDashboard />}
-      />
+  path="/opportunities"
+  element={<OpportunityDirectory />}
+/>
 
       <Route path="/profile" element={<StudentProfile />} />
-
+      <Route path="/" element={<WayaHome />} />
       <Route path="/opportunities/:id" element={<OpportunityDetails />}
 />
 
